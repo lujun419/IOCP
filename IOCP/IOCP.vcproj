@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Users\LJ\Documents\Visual Studio 2008\Projects\IOCP\public&quot;;&quot;C:\Users\LJ\Documents\Visual Studio 2008\Projects\IOCP\IOCP\Data&quot;"
+				AdditionalIncludeDirectories="E:\VSProject\IOCP\IOCP\Data;E:\VSProject\IOCP\public"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"

@@ -17,6 +17,10 @@
 //#include <WinSock.h>
 using namespace std;
 
+//----
+const int MAX_ACCEPT = 1000;
+//----
+
 const int Data_Buffer_Size = 1024 * 4;
 enum Operate_type{IO_ACCEPT,IO_READ,IO_WRITE};
 
@@ -40,7 +44,7 @@ private:
 	WSADATA WSAdata;
 	SOCKADDR_IN ServerAddr;
 	HANDLE IOCOMPort;  //IO完成端口
-
+	int FActiveAcceptors; //已经创建的ACCEPTEX
     BOOL GetExtensions();
 public:
 	
@@ -50,7 +54,7 @@ public:
 	LPFN_GETACCEPTEXSOCKADDRS lpfnGetAceeptExSockAddr;
 	HANDLE GetIOCOMPort();
 	SOCKET GetListenSocket();
-	
+	int GetActiveAcceptors(){return FActiveAcceptors;};
 
 };
 

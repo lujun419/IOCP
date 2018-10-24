@@ -6,42 +6,51 @@
 
 DWORD WINAPI AcceptThreadProc(LPVOID lpThreadParameter)
 {
-	/* 这里线程的处理函数,这个函数主要用户IO完成端口的工作线程
+	/* 这里线程的处理函数,这个函数主要用户IO完成端口的并发设置数量
 	*/
-	uSocketCon *pSocketCon = (uSocketCon *)lpThreadParameter;
-	BOOL bRetVal = TRUE;
-	SOCKET AcceptSocket = WSASocket(AF_INET,SOCK_STREAM,0,NULL,0,WSA_FLAG_OVERLAPPED);
-	
-	pIO_Operate_Data PIO= new IO_Operate_Data;
-	CreateIoCompletionPort((HANDLE)AcceptSocket,pSocketCon->GetIOCOMPort(),(DWORD)PIO,0);
+	uSocketCon *pSocketCon = dynamic_cast<uSocketCon *>((uSocketCon *)lpThreadParameter);
+	while(TRUE)
+	{   
+		int ActiveAcc = pSocketCon->GetActiveAcceptors();
+		if(ActiveAcc < MAX_ACCEPT)
+		{
+		
+			BOOL bRetVal = TRUE;
+			SOCKET AcceptSocket = WSASocket(AF_INET,SOCK_STREAM,0,NULL,0,WSA_FLAG_OVERLAPPED);
 
-	
-	PIO->sock = AcceptSocket;
-	PIO->databuf.buf = PIO->buffer;
-	PIO->databuf.len = sizeof(PIO->buffer);
-	PIO->type = IO_ACCEPT;
-    ZeroMemory(&PIO->overlapped,sizeof(PIO->overlapped));
-	DWORD dwBytes = 0;
-    if(pSocketCon->lpfnAcceptEx == NULL)
-		OutputDebug(TEXT("lpfnAcceptEx is NULL."));
-	bRetVal = pSocketCon->lpfnAcceptEx(pSocketCon->GetListenSocket(),
-										PIO->sock,
-										&PIO->databuf,
-										0,
-										sizeof(SOCKADDR_IN) + 16,
-										sizeof(SOCKADDR_IN) + 16,
-										&dwBytes,
-										&PIO->overlapped);
-	
-	if(bRetVal)
-		return 0;
-	else
-	{
-		if(WSAGetLastError() == WSA_IO_PENDING)
-			return 0;
-		else
-			return -1;
+			pIO_Operate_Data PIO= new IO_Operate_Data;
+			CreateIoCompletionPort((HANDLE)AcceptSocket,pSocketCon->GetIOCOMPort(),(DWORD)PIO,0);
+
+
+			PIO->sock = AcceptSocket;
+			PIO->databuf.buf = PIO->buffer;
+			PIO->databuf.len = sizeof(PIO->buffer);
+			PIO->type = IO_ACCEPT;
+			ZeroMemory(&PIO->overlapped,sizeof(PIO->overlapped));
+			DWORD dwBytes = 0;
+			if(pSocketCon->lpfnAcceptEx == NULL)
+				OutputDebug(TEXT("lpfnAcceptEx is NULL."));
+			bRetVal = pSocketCon->lpfnAcceptEx(pSocketCon->GetListenSocket(),
+				PIO->sock,
+				&PIO->databuf,
+				0,
+				sizeof(SOCKADDR_IN) + 16,
+				sizeof(SOCKADDR_IN) + 16,
+				&dwBytes,
+				&PIO->overlapped);
+
+			if(bRetVal)
+				return 0;
+			else
+			{
+				if(WSAGetLastError() == WSA_IO_PENDING)
+					return 0;
+				else
+					return -1;
+			}
+		}
 	}
+	return 0;
 }
 
 DWORD WINAPI WorkThreadProc(LPVOID lpThreadParameter)
@@ -54,7 +63,7 @@ DWORD WINAPI WorkThreadProc(LPVOID lpThreadParameter)
 	{
 		GetQueuedCompletionStatus(pSocketCon->GetIOCOMPort(),&TransferBytes,&CompletionKey,(LPOVERLAPPED *)&pOverLapped,INFINITE);
 		pIO_Operate_Data pIO_Data = CONTAINING_RECORD(pOverLapped,IO_Operate_Data,overlapped);
-		std::cout<<"lianjie"<<endl;
+		std::cout<<"lianjie: "<<GetCurrentThreadId<<endl;
 
 		switch((Operate_type)pIO_Data->type)
 		{
@@ -64,7 +73,8 @@ DWORD WINAPI WorkThreadProc(LPVOID lpThreadParameter)
 				SOCKET aListen = pSocketCon->GetListenSocket();
 				DWORD Flag = 0;
 				DWORD dwBytesRecv = 0;
-				setsockopt(pIO_Data->sock,SOL_SOCKET,SO_UPDATE_ACCEPT_CONTEXT,(const char *)&aListen,sizeof(aListen));
+				pIO_Data->type = IO_READ;
+				//setsockopt(pIO_Data->sock,SOL_SOCKET,SO_UPDATE_ACCEPT_CONTEXT,(const char *)&aListen,sizeof(aListen));
 				WSARecv(pIO_Data->sock,&pIO_Data->databuf,1,&dwBytesRecv,&Flag,&pIO_Data->overlapped,NULL);
 
 				break;
@@ -87,6 +97,7 @@ DWORD WINAPI WorkThreadProc(LPVOID lpThreadParameter)
 
 uSocketCon::uSocketCon(string ip,int port)
 {
+	FActiveAcceptors = 0;
 	lpfnAcceptEx = NULL;
 	lpfnGetAceeptExSockAddr = NULL;
 	WSAStartup(MAKEWORD(2,2),&WSAdata);
@@ -100,7 +111,7 @@ uSocketCon::uSocketCon(string ip,int port)
 	{
 		CreateThread(NULL,0,WorkThreadProc,this,0,NULL);
 	}
-
+	//CreateThread(NULL,0,WorkThreadProc,this,0,NULL);
 	LSocket = WSASocket(AF_INET,SOCK_STREAM,0,NULL,0,WSA_FLAG_OVERLAPPED);
 
 	CreateIoCompletionPort((HANDLE)LSocket,IOCOMPort,0,0);//绑定LSocket 到IO端口上

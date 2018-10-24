@@ -146,7 +146,7 @@ if (cSocket == 0)
 }
 sockaddr_in ServerAddr; 
 ServerAddr.sin_family = AF_INET;
-ServerAddr.sin_addr.S_un.S_addr = inet_addr("192.168.9.211");
+ServerAddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
 ServerAddr.sin_port = htons(8000);
 
 DWORD ret = connect(cSocket,(struct sockaddr*)&ServerAddr,sizeof(SOCKADDR_IN));
@@ -168,7 +168,7 @@ buf.len = strlen(data);
 DWORD dwBytes = 0;
 OVERLAPPED aol;
 ZeroMemory(&aol,sizeof(aol));
-for (int i = 0; i < 2; i++)
+for (int i = 0; i < 1; i++)
 {
 	ret = WSASend(cSocket,&buf,1,&dwBytes,0,&aol,NULL);
 	if(ret == 0)
