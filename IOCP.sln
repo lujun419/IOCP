@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IOCP", "IOCP\IOCP.vcproj", "{C6F74B5B-5CE8-461A-81A2-D2B62E18E9F2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "Client\Client.vcproj", "{0456DE6B-3EA8-4771-BD36-3DDC7389F346}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C6F74B5B-5CE8-461A-81A2-D2B62E18E9F2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C6F74B5B-5CE8-461A-81A2-D2B62E18E9F2}.Debug|Win32.Build.0 = Debug|Win32
+		{C6F74B5B-5CE8-461A-81A2-D2B62E18E9F2}.Release|Win32.ActiveCfg = Release|Win32
+		{C6F74B5B-5CE8-461A-81A2-D2B62E18E9F2}.Release|Win32.Build.0 = Release|Win32
+		{0456DE6B-3EA8-4771-BD36-3DDC7389F346}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0456DE6B-3EA8-4771-BD36-3DDC7389F346}.Debug|Win32.Build.0 = Debug|Win32
+		{0456DE6B-3EA8-4771-BD36-3DDC7389F346}.Release|Win32.ActiveCfg = Release|Win32
+		{0456DE6B-3EA8-4771-BD36-3DDC7389F346}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
