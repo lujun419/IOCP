@@ -11,6 +11,7 @@
 #include <string>
 
 #include <Windows.h>
+#include "ServerClient.h"
 
 
 

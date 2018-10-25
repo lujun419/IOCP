@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="E:\VSProject\IOCP\IOCP\Data;E:\VSProject\IOCP\public"
+				AdditionalIncludeDirectories="E:\VSProject\IOCP\Data;E:\VSProject\public"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -181,6 +181,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ServerClient.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -220,6 +224,10 @@
 			</File>
 			<File
 				RelativePath=".\SaveData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ServerClient.h"
 				>
 			</File>
 			<File
