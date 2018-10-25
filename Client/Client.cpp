@@ -147,7 +147,7 @@ if (cSocket == 0)
 sockaddr_in ServerAddr; 
 ServerAddr.sin_family = AF_INET;
 ServerAddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-ServerAddr.sin_port = htons(8000);
+ServerAddr.sin_port = htons(801);
 
 DWORD ret = connect(cSocket,(struct sockaddr*)&ServerAddr,sizeof(SOCKADDR_IN));
 if(ret == 0)
@@ -161,16 +161,18 @@ else
 char sndbuffer[80] = {0};
 strcpy(sndbuffer,TEXT("hello Server!"));
 //ret = send(cSocket,sndbuffer,strlen(sndbuffer),0);
-char *data = "hello.\n";
+char data[40] = {0};
 WSABUF buf;
+strcpy(data,TEXT("hello Server!"));
 buf.buf = data;
-buf.len = strlen(data);
+buf.len = sizeof(data);
 DWORD dwBytes = 0;
 OVERLAPPED aol;
 ZeroMemory(&aol,sizeof(aol));
 for (int i = 0; i < 1; i++)
 {
-	ret = WSASend(cSocket,&buf,1,&dwBytes,0,&aol,NULL);
+	//ret = WSASend(cSocket,&buf,1,&dwBytes,0,&aol,NULL);
+	ret = send(cSocket,data,strlen(data),0);
 	if(ret == 0)
 	{
 		std::cout<<dwBytes<<endl;
@@ -178,6 +180,11 @@ for (int i = 0; i < 1; i++)
 	}
 };
 system("pause");
+ LINGER a;
+ a.l_onoff = 1;
+ a.l_linger = 0;
+ int b;
+setsockopt(cSocket,SOL_SOCKET,SO_LINGER,(char *)&a,sizeof(LINGER));
 closesocket(cSocket);
 	return 0;
 }

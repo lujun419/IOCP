@@ -13,6 +13,7 @@ ServerClient::ServerClient( const ServerClient &Server )
 	//Éî¿½±´
 	DataSize = Server.DataSize;
 	DataBuffer = new char[DataSize + 2*(sizeof(SOCKADDR_IN) + 16)];
+	ZeroMemory(DataBuffer,DataSize + 2*(sizeof(SOCKADDR_IN) + 16));
 	strcpy(Server.DataBuffer,DataBuffer);
 }
 
@@ -28,6 +29,7 @@ bool ServerClient::ReallocMem(const DWORD dSize )
 	*/
 	DataSize = dSize;
 	DataBuffer = new char[DataSize + 2*(sizeof(SOCKADDR_IN) + 16)];
+	ZeroMemory(DataBuffer,DataSize);
 	return TRUE;
 
 }
@@ -37,6 +39,7 @@ ServerClient& ServerClient::operator=( const ServerClient &Server )
 	if(this != &Server)
 	{
 		char *temp = new char[Server.DataSize + 2*(sizeof(SOCKADDR_IN) + 16)];
+		ZeroMemory(temp,Server.DataSize + 2*(sizeof(SOCKADDR_IN) + 16));
 		delete[] DataBuffer;
 		strcpy(temp,Server.DataBuffer);
 		DataBuffer = temp;
@@ -52,4 +55,9 @@ void ServerClient::SetClientSock( SOCKET aClientSock )
 char* ServerClient::GetDataBuffer()
 {
 	return DataBuffer;
+}
+
+DWORD ServerClient::GetDataSize()
+{
+	return DataSize;
 }

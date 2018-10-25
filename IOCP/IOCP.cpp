@@ -33,14 +33,16 @@ int _tmain(int argc, _TCHAR* argv[])
 	//PSave->Display();
 	//system("pause");
 	//delete PSave;	
-	/*uSocketCon *pSocketCon = new uSocketCon("192.168.9.211",8000);
-	system("pause");*/
+	char *data = new char[5];
+	int a = sizeof(data);
+	uSocketCon *pSocketCon = new uSocketCon("192.168.9.211",801);
+	system("pause");
 	//string s= "1234567891023456";
-	string s;
-	char a[] = "1234567891023456";
+	/*string s= "123456";
+	char a[] = "12324354";
 	memcpy((char *)&s,a,17);
-	OutputDebugString(_TEXT("sdf"));
-
+	OutputDebugString(_TEXT("sdf"));*/
+	WSACleanup();
 	return 0;
 }
 

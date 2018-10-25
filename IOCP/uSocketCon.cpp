@@ -14,7 +14,7 @@ DWORD WINAPI AcceptThreadProc(LPVOID lpThreadParameter)
 		int ActiveAcc = pSocketCon->GetActiveAcceptors();
 		if(ActiveAcc < MAX_ACCEPT)
 		{
-		
+			InterlockedIncrement((LPLONG)&ActiveAcc);
 			BOOL bRetVal = TRUE;
 			SOCKET AcceptSocket = WSASocket(AF_INET,SOCK_STREAM,0,NULL,0,WSA_FLAG_OVERLAPPED);
 
@@ -22,11 +22,12 @@ DWORD WINAPI AcceptThreadProc(LPVOID lpThreadParameter)
 			CreateIoCompletionPort((HANDLE)AcceptSocket,pSocketCon->GetIOCOMPort(),(DWORD)PIO,0);
 			if (!PIO->Client)
 			{
-				PIO->Client = new ServerClient();
-				PIO->Client->SetClientSock(AcceptSocket);
-				PIO->Client->ReallocMem(BUFFERSIZE);
-				PIO->op_type = IO_ACCEPT;
+
 			}
+			PIO->Client = new ServerClient();
+			PIO->Client->SetClientSock(AcceptSocket);
+			PIO->Client->ReallocMem(BUFFERSIZE);
+			PIO->op_type = IO_ACCEPT;
 			ZeroMemory(&PIO->overlapped,sizeof(PIO->overlapped));
 			DWORD dwBytes = 0;
 			if(pSocketCon->lpfnAcceptEx == NULL)
@@ -34,7 +35,7 @@ DWORD WINAPI AcceptThreadProc(LPVOID lpThreadParameter)
 			bRetVal = pSocketCon->lpfnAcceptEx(pSocketCon->GetListenSocket(),
 				PIO->Client->ClientSock,
 				PIO->Client->GetDataBuffer(),
-				0,
+				4096,
 				sizeof(SOCKADDR_IN) + 16,
 				sizeof(SOCKADDR_IN) + 16,
 				&dwBytes,
@@ -62,7 +63,7 @@ DWORD WINAPI WorkThreadProc(LPVOID lpThreadParameter)
 	LPOVERLAPPED pOverLapped = NULL;
 	while (TRUE)
 	{
-		GetQueuedCompletionStatus(pSocketCon->GetIOCOMPort(),&TransferBytes,&CompletionKey,(LPOVERLAPPED *)&pOverLapped,INFINITE);
+		BOOL aret = GetQueuedCompletionStatus(pSocketCon->GetIOCOMPort(),&TransferBytes,&CompletionKey,(LPOVERLAPPED *)&pOverLapped,INFINITE);
 		pIO_Operate_Data pIO_Data = CONTAINING_RECORD(pOverLapped,IO_Operate_Data,overlapped);
 		std::cout<<"lianjie: "<<GetCurrentThreadId<<endl;
 
@@ -72,17 +73,35 @@ DWORD WINAPI WorkThreadProc(LPVOID lpThreadParameter)
 			{
 				OutputDebug("Connect.acceptex");
 				SOCKET aListen = pSocketCon->GetListenSocket();
-				DWORD Flag = 0;
+				DWORD Flag = 0; 
 				DWORD dwBytesRecv = 0;
 				pIO_Data->op_type = IO_READ;
+				WSABUF buf;
+				buf.buf =pIO_Data->Client->GetDataBuffer(); 
+				buf.len = pIO_Data->Client->GetDataSize();
 				//setsockopt(pIO_Data->sock,SOL_SOCKET,SO_UPDATE_ACCEPT_CONTEXT,(const char *)&aListen,sizeof(aListen));
-				WSARecv(pIO_Data->Client->ClientSock,(LPWSABUF)pIO_Data->Client->GetDataBuffer(),1,&dwBytesRecv,&Flag,&pIO_Data->overlapped,NULL);
-
+				int ret = WSARecv(pIO_Data->Client->ClientSock,&buf,1,&dwBytesRecv,&Flag,&pIO_Data->overlapped,NULL);
+				OutputDebug(pIO_Data->Client->GetDataBuffer());
 				break;
 			}
 		case IO_READ:
 			{
-				OutputDebug("IO_READ");
+				DWORD Flag = 0;
+				DWORD dwBytesRecv = 0;
+				WSABUF buf;
+				
+				/*int ret = WSARecv(pIO_Data->Client->ClientSock,(LPWSABUF)pIO_Data->Client->GetDataBuffer(),1,&dwBytesRecv,&Flag,&pIO_Data->overlapped,NULL);*/
+				buf.buf =pIO_Data->Client->GetDataBuffer(); 
+				buf.len = pIO_Data->Client->GetDataSize();
+				int ret = WSARecv(pIO_Data->Client->ClientSock,&buf,1,&dwBytesRecv,&Flag,&pIO_Data->overlapped,NULL);
+				OutputDebug(pIO_Data->Client->GetDataBuffer());
+				if(dwBytesRecv == 0) 
+				{
+					//客户端断开连接
+					/*delete pIO_Data->Client;
+					delete pIO_Data;*/
+
+				}
 				break;
 			}
 		case IO_WRITE:
@@ -108,11 +127,11 @@ uSocketCon::uSocketCon(string ip,int port)
 	SYSTEM_INFO info;
 	GetSystemInfo(&info);
 
-	for(DWORD i = 0 ; i < info.dwNumberOfProcessors * 2 + 2; i++)
-	{
-		CreateThread(NULL,0,WorkThreadProc,this,0,NULL);
-	}
-	//CreateThread(NULL,0,WorkThreadProc,this,0,NULL);
+	//for(DWORD i = 0 ; i < info.dwNumberOfProcessors * 2 + 2; i++)
+	//{
+	//	CreateThread(NULL,0,WorkThreadProc,this,0,NULL);
+	//}
+	CreateThread(NULL,0,WorkThreadProc,this,0,NULL);
 	LSocket = WSASocket(AF_INET,SOCK_STREAM,0,NULL,0,WSA_FLAG_OVERLAPPED);
 
 	CreateIoCompletionPort((HANDLE)LSocket,IOCOMPort,0,0);//绑定LSocket 到IO端口上
@@ -125,7 +144,7 @@ uSocketCon::uSocketCon(string ip,int port)
 	{
 		char c[8]={0};
 		_itoa(GetLastError(),c,10);
-		OutputDebug("bind error:",c);
+		OutputDebug("bind error:","123");
 		WSACleanup();
 		return;
 	};
@@ -142,7 +161,7 @@ uSocketCon::uSocketCon(string ip,int port)
 
 
 	CreateThread(NULL,0,AcceptThreadProc,this,0,NULL);
-	CreateThread(NULL,0,AcceptThreadProc,this,0,NULL);
+	//CreateThread(NULL,0,AcceptThreadProc,this,0,NULL);
 }
 
 uSocketCon::~uSocketCon(void)

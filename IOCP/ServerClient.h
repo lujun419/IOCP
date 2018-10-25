@@ -20,6 +20,7 @@ public:
 	bool ReallocMem(const DWORD dSize);//开辟接收数据的空间
 	void SetClientSock(SOCKET aClientSock);
 	char* GetDataBuffer();//获取当前的数据
+	DWORD GetDataSize();
 
 
 };
