@@ -17,7 +17,7 @@ public:
 	~ServerClient(void);
 	ServerClient(const ServerClient &Server);
 	ServerClient& operator=(const ServerClient &Server);
-	bool ReallocMem(DWORD dSize);//开辟接收数据的空间
+	bool ReallocMem(const DWORD dSize);//开辟接收数据的空间
 	void SetClientSock(SOCKET aClientSock);
 	char* GetDataBuffer();//获取当前的数据
 

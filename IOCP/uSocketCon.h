@@ -19,7 +19,9 @@
 using namespace std;
 
 //----
-const int MAX_ACCEPT = 1000;
+//const DWORD BUFFERSIZE= 0x1000;
+#define BUFFERSIZE 0x1000
+#define  MAX_ACCEPT  1000
 //----
 
 const int Data_Buffer_Size = 1024 * 4;
@@ -28,11 +30,8 @@ enum Operate_type{IO_ACCEPT,IO_READ,IO_WRITE};
 typedef struct _IO_Operate_Data_{
 
 	OVERLAPPED overlapped;
-	WSABUF databuf;
-	char buffer[Data_Buffer_Size]; //内容
-	Operate_type type;//操作类型
-	SOCKET sock;//操作套接字
-	DWORD len;  //接受内容的长度
+	Operate_type op_type;//操作类型
+	ServerClient *Client;
 }IO_Operate_Data,*pIO_Operate_Data;
 
 class uSocketCon

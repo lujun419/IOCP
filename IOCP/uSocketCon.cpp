@@ -20,19 +20,20 @@ DWORD WINAPI AcceptThreadProc(LPVOID lpThreadParameter)
 
 			pIO_Operate_Data PIO= new IO_Operate_Data;
 			CreateIoCompletionPort((HANDLE)AcceptSocket,pSocketCon->GetIOCOMPort(),(DWORD)PIO,0);
-
-
-			PIO->sock = AcceptSocket;
-			PIO->databuf.buf = PIO->buffer;
-			PIO->databuf.len = sizeof(PIO->buffer);
-			PIO->type = IO_ACCEPT;
+			if (!PIO->Client)
+			{
+				PIO->Client = new ServerClient();
+				PIO->Client->SetClientSock(AcceptSocket);
+				PIO->Client->ReallocMem(BUFFERSIZE);
+				PIO->op_type = IO_ACCEPT;
+			}
 			ZeroMemory(&PIO->overlapped,sizeof(PIO->overlapped));
 			DWORD dwBytes = 0;
 			if(pSocketCon->lpfnAcceptEx == NULL)
 				OutputDebug(TEXT("lpfnAcceptEx is NULL."));
 			bRetVal = pSocketCon->lpfnAcceptEx(pSocketCon->GetListenSocket(),
-				PIO->sock,
-				&PIO->databuf,
+				PIO->Client->ClientSock,
+				PIO->Client->GetDataBuffer(),
 				0,
 				sizeof(SOCKADDR_IN) + 16,
 				sizeof(SOCKADDR_IN) + 16,
@@ -65,7 +66,7 @@ DWORD WINAPI WorkThreadProc(LPVOID lpThreadParameter)
 		pIO_Operate_Data pIO_Data = CONTAINING_RECORD(pOverLapped,IO_Operate_Data,overlapped);
 		std::cout<<"lianjie: "<<GetCurrentThreadId<<endl;
 
-		switch((Operate_type)pIO_Data->type)
+		switch((Operate_type)pIO_Data->op_type)
 		{
 		case IO_ACCEPT:
 			{
@@ -73,9 +74,9 @@ DWORD WINAPI WorkThreadProc(LPVOID lpThreadParameter)
 				SOCKET aListen = pSocketCon->GetListenSocket();
 				DWORD Flag = 0;
 				DWORD dwBytesRecv = 0;
-				pIO_Data->type = IO_READ;
+				pIO_Data->op_type = IO_READ;
 				//setsockopt(pIO_Data->sock,SOL_SOCKET,SO_UPDATE_ACCEPT_CONTEXT,(const char *)&aListen,sizeof(aListen));
-				WSARecv(pIO_Data->sock,&pIO_Data->databuf,1,&dwBytesRecv,&Flag,&pIO_Data->overlapped,NULL);
+				WSARecv(pIO_Data->Client->ClientSock,(LPWSABUF)pIO_Data->Client->GetDataBuffer(),1,&dwBytesRecv,&Flag,&pIO_Data->overlapped,NULL);
 
 				break;
 			}

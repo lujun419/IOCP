@@ -21,7 +21,7 @@ ServerClient::~ServerClient(void)
 	delete[] DataBuffer;
 }
 
-bool ServerClient::ReallocMem( DWORD dSize )
+bool ServerClient::ReallocMem(const DWORD dSize )
 {
 	/*
 	开辟空间需要加上 2*(sizeof(SOCKADDR_IN) + 16，见acceptex的msdn
