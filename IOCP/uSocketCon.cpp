@@ -11,19 +11,20 @@ DWORD WINAPI AcceptThreadProc(LPVOID lpThreadParameter)
 	uSocketCon *pSocketCon = dynamic_cast<uSocketCon *>((uSocketCon *)lpThreadParameter);
 	while(TRUE)
 	{   
+		WaitForSingleObject(pSocketCon->GetAcceEvent(),INFINITE);
 		int ActiveAcc = pSocketCon->GetActiveAcceptors();
-		if(ActiveAcc < MAX_ACCEPT)
+		while(ActiveAcc < MAX_ACCEPT)
 		{
-			InterlockedIncrement((LPLONG)&ActiveAcc);
+			
 			BOOL bRetVal = TRUE;
 			SOCKET AcceptSocket = WSASocket(AF_INET,SOCK_STREAM,0,NULL,0,WSA_FLAG_OVERLAPPED);
 
-			pIO_Operate_Data PIO= new IO_Operate_Data;
-			CreateIoCompletionPort((HANDLE)AcceptSocket,pSocketCon->GetIOCOMPort(),(DWORD)PIO,0);
-			if (!PIO->Client)
+			pIO_Operate_Data PIO =static_cast<pIO_Operate_Data>(pSocketCon->GetStackPtr()->Pop());
+			/*if ()
 			{
+			}*/
 
-			}
+			CreateIoCompletionPort((HANDLE)AcceptSocket,pSocketCon->GetIOCOMPort(),(DWORD)PIO,0);
 			PIO->Client = new ServerClient();
 			PIO->Client->SetClientSock(AcceptSocket);
 			PIO->Client->ReallocMem(BUFFERSIZE);
@@ -41,14 +42,18 @@ DWORD WINAPI AcceptThreadProc(LPVOID lpThreadParameter)
 				&dwBytes,
 				&PIO->overlapped);
 
-			if(bRetVal)
-				return 0;
-			else
+			InterlockedIncrement((LPLONG)&ActiveAcc);
+			if(!bRetVal)
 			{
-				if(WSAGetLastError() == WSA_IO_PENDING)
-					return 0;
-				else
-					return -1;
+				if(WSAGetLastError() != WSA_IO_PENDING)
+				{
+					OutputDebug("Create Accept socket Failed.");
+					/*
+					
+					*/
+					PIO->Client->ClearSocket();
+
+				}
 			}
 		}
 	}
@@ -120,6 +125,10 @@ uSocketCon::uSocketCon(string ip,int port)
 	FActiveAcceptors = 0;
 	lpfnAcceptEx = NULL;
 	lpfnGetAceeptExSockAddr = NULL;
+	pStackSafe = new StacksSafe(STACKCAP);
+	
+	HEvent = CreateEvent(NULL,FALSE,TRUE,TEXT("AcceptexEvent"));
+
 	WSAStartup(MAKEWORD(2,2),&WSAdata);
 
 	IOCOMPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE,NULL,0,0);
@@ -166,6 +175,11 @@ uSocketCon::uSocketCon(string ip,int port)
 
 uSocketCon::~uSocketCon(void)
 {
+	  CloseHandle(HEvent);
+	  if (NULL != pStackSafe)
+	  {
+		  delete pStackSafe;
+	  }
 }
 
 BOOL uSocketCon::GetExtensions()

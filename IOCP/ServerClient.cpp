@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "ServerClient.h"
+#include "uSocketCon.h"
 
 ServerClient::ServerClient()
 {
@@ -49,7 +50,8 @@ ServerClient& ServerClient::operator=( const ServerClient &Server )
 
 void ServerClient::SetClientSock( SOCKET aClientSock )
 {
-	ClientSock = aClientSock;
+	//ClientSock = aClientSock;
+	InterlockedExchange(reinterpret_cast<LONG *>(&ClientSock),aClientSock);
 }
 
 char* ServerClient::GetDataBuffer()
@@ -60,4 +62,59 @@ char* ServerClient::GetDataBuffer()
 DWORD ServerClient::GetDataSize()
 {
 	return DataSize;
+}
+
+void * StacksSafe::Pop()
+{
+	pIO_Operate_Data pData = NULL;
+	pData = (pIO_Operate_Data)InterlockedPopEntrySList(pSlist);
+	if (NULL == pData)
+	{
+		pData = (pIO_Operate_Data)_aligned_malloc(sizeof(IO_Operate_Data),MEMORY_ALLOCATION_ALIGNMENT);
+	}
+	if (NULL != pData)
+	{
+		//ZeroMemory(pData,sizeof(IO_Operate_Data));
+	}
+	return pData;
+}
+
+StacksSafe::StacksSafe( DWORD Capacity )
+{
+	if ((Capacity > 0) && (Capacity <= STACKMAX))
+	{
+		this->Capacity = Capacity;
+	}
+	else
+		OutputDebug("Set Capacity Error.");
+	
+	pSlist = (PSLIST_HEADER)_aligned_malloc(sizeof(SLIST_HEADER),MEMORY_ALLOCATION_ALIGNMENT);
+	InitializeSListHead(pSlist);
+}
+
+void StacksSafe::push( void * data )
+{
+	if (NULL == data)
+	{
+		return;
+	}
+	if (this->Capacity>QueryDepthSList(pSlist))
+	{
+		InterlockedPushEntrySList(pSlist,(PSINGLE_LIST_ENTRY)data);
+	}
+    _aligned_free(data);
+}
+
+StacksSafe::~StacksSafe()
+{
+  if (QueryDepthSList(pSlist) > 0)
+  {
+	  
+  }
+  InterlockedFlushSList(pSlist);
+  void *pData = InterlockedPopEntrySList(pSlist);
+  if (NULL != pData)
+  {
+	  OutputDebug("Á´±í·Ç¿Õ.");
+  }
 }

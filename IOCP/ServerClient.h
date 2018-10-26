@@ -21,6 +21,19 @@ public:
 	void SetClientSock(SOCKET aClientSock);
 	char* GetDataBuffer();//获取当前的数据
 	DWORD GetDataSize();
+	SOCKET ClearSocket(){return InterlockedExchange(reinterpret_cast<LONG *>(&ClientSock),0);}; //清除当前client的socket
 
+};
 
+class StacksSafe
+{
+private:
+	PSLIST_HEADER pSlist; 
+	DWORD Capacity;
+public:
+	StacksSafe(DWORD Capacity);
+	~StacksSafe();
+	void * Pop();
+	void push(void * data);
+		//InitializeSListHead()
 };

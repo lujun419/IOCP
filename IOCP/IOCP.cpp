@@ -6,6 +6,8 @@
 //#include <WinSock2.h>
 #include<iostream>
 #include "uSocketCon.h"
+#include "ServerClient.h"
+
 using namespace std;
 
 
@@ -34,14 +36,22 @@ int _tmain(int argc, _TCHAR* argv[])
 	//system("pause");
 	//delete PSave;	
 	char *data = new char[5];
-	int a = sizeof(data);
-	uSocketCon *pSocketCon = new uSocketCon("192.168.9.211",801);
-	system("pause");
-	//string s= "1234567891023456";
-	/*string s= "123456";
-	char a[] = "12324354";
-	memcpy((char *)&s,a,17);
-	OutputDebugString(_TEXT("sdf"));*/
+	//int a = sizeof(data);
+	//uSocketCon *pSocketCon = new uSocketCon("192.168.9.211",801);
+	//system("pause");
+    StacksSafe *pStack = new StacksSafe(1000);
+	
+	pIO_Operate_Data pData =static_cast<pIO_Operate_Data >(pStack->Pop());
+	pData->Client = new ServerClient;
+	pData->op_type = IO_READ;
+	pStack->push(pData);
+	pData = NULL;
+	pData =static_cast<pIO_Operate_Data >(pStack->Pop());
+	if (NULL != pData->Client)
+	{
+		OutputDebug(TEXT("dfad"));
+	}
+	delete pStack;
 	WSACleanup();
 	return 0;
 }
